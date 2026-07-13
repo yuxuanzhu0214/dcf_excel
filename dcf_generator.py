@@ -9,12 +9,22 @@ Author: Quant Finance & Investment Banking Modeling Expert
 import os
 import sys
 import argparse
+import json
 import pandas as pd
 import openpyxl
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 from openpyxl.utils import get_column_letter
 from openbb import obb
 import yfinance as yf
+
+# Optional Google API libraries
+try:
+    from google.oauth2 import service_account
+    from googleapiclient.discovery import build
+    from googleapiclient.http import MediaFileUpload
+    GOOGLE_API_AVAILABLE = True
+except ImportError:
+    GOOGLE_API_AVAILABLE = False
 
 def extract_financial_data(ticker):
     """
@@ -1130,7 +1140,6 @@ def maybe_upload_to_google_drive(filepath, ticker):
     Checks for Google Service Account credentials outside the repository.
     If found, uploads the generated Excel sheet to Google Drive and converts it to Google Sheets.
     """
-    import json
     config_dir = os.path.expanduser("~/.config/dcf_excel")
     creds_path = os.path.join(config_dir, "google_credentials.json")
     config_path = os.path.join(config_dir, "config.json")
@@ -1140,11 +1149,12 @@ def maybe_upload_to_google_drive(filepath, ticker):
         
     print(f"[*] Google API credentials found. Initiating Drive upload for {ticker}...")
     
+    if not GOOGLE_API_AVAILABLE:
+        print("[!] Error: Google API libraries are not installed in the environment.")
+        print("[*] Please run: pip install google-api-python-client google-auth-httplib2 google-auth-oauthlib")
+        return
+
     try:
-        from google.oauth2 import service_account
-        from googleapiclient.discovery import build
-        from googleapiclient.http import MediaFileUpload
-        
         # Load folder ID configuration if available
         folder_id = None
         if os.path.exists(config_path):
