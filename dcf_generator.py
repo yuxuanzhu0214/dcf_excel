@@ -902,6 +902,9 @@ def generate_openbb_dcf(ticker, output_path=None):
         else:
             cell_val.value = formatted_formula
             
+        if num_fmt:
+            cell_val.number_format = num_fmt
+            
         if fill:
             cell_val.fill = fill
         elif is_sum:
