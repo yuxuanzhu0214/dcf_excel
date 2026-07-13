@@ -68,22 +68,55 @@ If you need to install the dependencies manually:
 
 If configured, the generator will automatically upload a copy of the Excel sheet and convert it to a native **Google Sheet** (preserving all formulas), printing the share link in the console.
 
-#### 1. Setup Config Folder & Credentials
-Create the config directory outside this repository to keep your keys private:
-```bash
-mkdir -p ~/.config/dcf_excel
-```
-Save your Google Service Account key file as `google_credentials.json` inside that folder:
-`/Users/yuxuanzhu/.config/dcf_excel/google_credentials.json`
+You can configure this using **User OAuth 2.0** (recommended for personal accounts to bypass Service Account quota limits) or a **Service Account**.
 
-#### 2. Configure target folder (Highly Recommended)
-Service Accounts operate in their own sandbox. To see the uploaded sheets in your personal Google Drive, you **must** share a Google Drive folder with the Service Account email (found under `"client_email"` in your JSON key) and configure the folder ID in a `config.json` file located at `/Users/yuxuanzhu/.config/dcf_excel/config.json`:
+---
+
+### Method A: User OAuth 2.0 (Recommended)
+
+This configures the generator to log in using your personal Google account. Uploaded spreadsheets will be directly owned by you in your Google Drive.
+
+#### 1. Generate Client Credentials in Google Cloud Console
+1. Go to the [Google Cloud Console](https://console.cloud.google.com/).
+2. Select or create a project.
+3. Enable both the **Google Drive API** and **Google Sheets API**.
+4. Go to the **Google Auth Platform** (or *OAuth consent screen*).
+5. Set up the OAuth consent screen with **External** user type.
+6. **Crucial:** In the left menu, select **Audience** (or *Test Users*), click **+ Add Users**, and add your own Google email address (the one you will log in with).
+7. Go to **Clients** (or *Credentials*), click **+ Create Credentials > OAuth client ID**, and choose **Desktop App**.
+8. Download the generated client secret JSON, rename it to **`client_secret.json`**, and save it to the local config folder:
+   `/Users/yuxuanzhu/.config/dcf_excel/client_secret.json`
+
+#### 2. Run and Authorize
+The first time you run `dcf <TICKER>`, the script will prompt you with a link or open your browser to log in. Click **Allow** (under *Advanced > Go to App (unsafe)*) to authorize the application. A login token will be securely saved locally to:
+`/Users/yuxuanzhu/.config/dcf_excel/token.pickle`
+
+---
+
+### Method B: Service Account (Alternative)
+
+#### 1. Setup Service Account Credentials
+1. Under **Credentials**, click **+ Create Credentials > Service Account**.
+2. Go to the **Keys** tab of the service account, click **Add Key > Create New Key (JSON)**, and download it.
+3. Rename the file to **`google_credentials.json`** and save it to:
+   `/Users/yuxuanzhu/.config/dcf_excel/google_credentials.json`
+
+#### 2. Share Google Drive Folder
+Because Service Accounts have a separate 0-byte sandbox, you **must** share a Google Drive folder with the Service Account’s email address as an **Editor** to allow uploads.
+
+---
+
+### Global Config File (`config.json`)
+
+To specify a target Google Drive folder destination for uploads (under either method), create a configuration file at `/Users/yuxuanzhu/.config/dcf_excel/config.json`:
 
 ```json
 {
   "drive_folder_id": "your_google_drive_folder_id_here"
 }
 ```
+
+*Note: You can find the Folder ID in the Google Drive URL: `drive.google.com/drive/folders/YOUR_FOLDER_ID`.*
 
 ---
 
