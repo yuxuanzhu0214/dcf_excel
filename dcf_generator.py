@@ -1119,7 +1119,73 @@ def generate_openbb_dcf(ticker, output_path=None):
         output_path = os.path.join(output_dir, f"{ticker}_DCF_Model.xlsx")
     wb.save(output_path)
     print(f"[+] Success! Multi-sheet dynamic model saved to: {output_path}")
+
+    # Optional: Upload copy to Google Drive / convert to Google Sheets
+    maybe_upload_to_google_drive(output_path, ticker)
+    
     return True
+
+def maybe_upload_to_google_drive(filepath, ticker):
+    """
+    Checks for Google Service Account credentials outside the repository.
+    If found, uploads the generated Excel sheet to Google Drive and converts it to Google Sheets.
+    """
+    import json
+    config_dir = os.path.expanduser("~/.config/dcf_excel")
+    creds_path = os.path.join(config_dir, "google_credentials.json")
+    config_path = os.path.join(config_dir, "config.json")
+    
+    if not os.path.exists(creds_path):
+        return  # Silently skip if no API credentials configured
+        
+    print(f"[*] Google API credentials found. Initiating Drive upload for {ticker}...")
+    
+    try:
+        from google.oauth2 import service_account
+        from googleapiclient.discovery import build
+        from googleapiclient.http import MediaFileUpload
+        
+        # Load folder ID configuration if available
+        folder_id = None
+        if os.path.exists(config_path):
+            try:
+                with open(config_path, 'r') as f:
+                    cfg = json.load(f)
+                    folder_id = cfg.get("drive_folder_id")
+            except Exception as e:
+                print(f"[!] Warning: Failed to read config.json ({e})")
+                
+        # Authenticate
+        scopes = ['https://www.googleapis.com/auth/drive']
+        creds = service_account.Credentials.from_service_account_file(creds_path, scopes=scopes)
+        service = build('drive', 'v3', credentials=creds)
+        
+        # Define metadata — converting to Google Sheets mimeType converts the file automatically!
+        file_metadata = {
+            'name': f"{ticker}_DCF_Model",
+            'mimeType': 'application/vnd.google-apps.spreadsheet'
+        }
+        if folder_id:
+            file_metadata['parents'] = [folder_id]
+            
+        media = MediaFileUpload(
+            filepath,
+            mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            resumable=True
+        )
+        
+        print(f"[*] Uploading and converting '{os.path.basename(filepath)}' to Google Sheets...")
+        uploaded_file = service.files().create(
+            body=file_metadata,
+            media_body=media,
+            fields='id,webViewLink'
+        ).execute()
+        
+        print(f"[+] Success! Google Sheet created.")
+        print(f"[+] Link: {uploaded_file.get('webViewLink')}")
+        
+    except Exception as e:
+        print(f"[!] Error uploading to Google Drive: {e}")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Generate professional DCF models using OpenBB and openpyxl.")
