@@ -22,6 +22,9 @@ try:
     from google.oauth2 import service_account
     from googleapiclient.discovery import build
     from googleapiclient.http import MediaFileUpload
+    from google_auth_oauthlib.flow import InstalledAppFlow
+    from google.auth.transport.requests import Request
+    import pickle
     GOOGLE_API_AVAILABLE = True
 except ImportError:
     GOOGLE_API_AVAILABLE = False
@@ -1137,14 +1140,20 @@ def generate_openbb_dcf(ticker, output_path=None):
 
 def maybe_upload_to_google_drive(filepath, ticker):
     """
-    Checks for Google Service Account credentials outside the repository.
-    If found, uploads the generated Excel sheet to Google Drive and converts it to Google Sheets.
+    Checks for Google API configurations outside the repository (supports User OAuth 2.0 and Service Account).
+    If config is found, uploads the generated Excel sheet to Google Drive and converts it to Google Sheets.
     """
     config_dir = os.path.expanduser("~/.config/dcf_excel")
     creds_path = os.path.join(config_dir, "google_credentials.json")
+    client_secret_path = os.path.join(config_dir, "client_secret.json")
+    token_path = os.path.join(config_dir, "token.pickle")
     config_path = os.path.join(config_dir, "config.json")
     
-    if not os.path.exists(creds_path):
+    # Check if either OAuth or Service Account file exists
+    has_oauth = os.path.exists(client_secret_path) or os.path.exists(token_path)
+    has_sa = os.path.exists(creds_path)
+    
+    if not (has_oauth or has_sa):
         return  # Silently skip if no API credentials configured
         
     print(f"[*] Google API credentials found. Initiating Drive upload for {ticker}...")
@@ -1165,9 +1174,32 @@ def maybe_upload_to_google_drive(filepath, ticker):
             except Exception as e:
                 print(f"[!] Warning: Failed to read config.json ({e})")
                 
-        # Authenticate
+        # Authenticate — Prefer User OAuth 2.0 to avoid Service Account quota limits
         scopes = ['https://www.googleapis.com/auth/drive']
-        creds = service_account.Credentials.from_service_account_file(creds_path, scopes=scopes)
+        creds = None
+        
+        if os.path.exists(token_path):
+            with open(token_path, 'rb') as token_file:
+                creds = pickle.load(token_file)
+                
+        if not creds or not creds.valid:
+            if creds and creds.expired and creds.refresh_token:
+                print("[*] Google login token expired. Refreshing...")
+                creds.refresh(Request())
+            elif os.path.exists(client_secret_path):
+                print("[*] Requesting new Google user authorization (OAuth browser prompt)...")
+                flow = InstalledAppFlow.from_client_secrets_file(client_secret_path, scopes)
+                creds = flow.run_local_server(port=0)
+                # Save credentials for future runs
+                with open(token_path, 'wb') as token_file:
+                    pickle.dump(creds, token_file)
+            elif has_sa:
+                print("[*] Falling back to Google Service Account credentials...")
+                creds = service_account.Credentials.from_service_account_file(creds_path, scopes=scopes)
+            else:
+                print("[!] Error: No valid OAuth token or client_secret.json found.")
+                return
+
         service = build('drive', 'v3', credentials=creds)
         
         # Define metadata — converting to Google Sheets mimeType converts the file automatically!
