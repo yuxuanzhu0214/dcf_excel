@@ -61,8 +61,29 @@ If you need to install the dependencies manually:
 
 2. **Install required packages:**
    ```bash
-   pip install openbb openpyxl yfinance pandas
+   pip install openbb openpyxl yfinance pandas google-api-python-client google-auth-httplib2 google-auth-oauthlib
    ```
+
+### ☁️ Optional: Auto-Upload to Google Drive / Google Sheets
+
+If configured, the generator will automatically upload a copy of the Excel sheet and convert it to a native **Google Sheet** (preserving all formulas), printing the share link in the console.
+
+#### 1. Setup Config Folder & Credentials
+Create the config directory outside this repository to keep your keys private:
+```bash
+mkdir -p ~/.config/dcf_excel
+```
+Save your Google Service Account key file as `google_credentials.json` inside that folder:
+`/Users/yuxuanzhu/.config/dcf_excel/google_credentials.json`
+
+#### 2. Configure target folder (Highly Recommended)
+Service Accounts operate in their own sandbox. To see the uploaded sheets in your personal Google Drive, you **must** share a Google Drive folder with the Service Account email (found under `"client_email"` in your JSON key) and configure the folder ID in a `config.json` file located at `/Users/yuxuanzhu/.config/dcf_excel/config.json`:
+
+```json
+{
+  "drive_folder_id": "your_google_drive_folder_id_here"
+}
+```
 
 ---
 
