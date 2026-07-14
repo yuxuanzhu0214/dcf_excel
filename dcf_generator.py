@@ -265,7 +265,7 @@ def extract_financial_data(ticker):
         "g_year3": g_year3,
     }
 
-def generate_openbb_dcf(ticker, output_path=None):
+def generate_openbb_dcf(ticker, output_path=None, currency="USD"):
     """
     Generate professional multi-sheet DCF valuation workbook.
     """
@@ -385,7 +385,7 @@ def generate_openbb_dcf(ticker, output_path=None):
     # Title
     ws_sum['A2'] = f"{company_name} ({ticker}) — DCF Valuation Summary"
     ws_sum['A2'].font = font_title
-    ws_sum['A3'] = "Unlevered DCF. USD mm unless noted. Market-value WACC; mid-year explicit cash-flow discounting."
+    ws_sum['A3'] = f"Unlevered DCF. {currency} mm unless noted. Market-value WACC; mid-year explicit cash-flow discounting."
     ws_sum['A3'].font = font_subtitle
 
     # Write summary card labels & formulas
@@ -394,13 +394,13 @@ def generate_openbb_dcf(ticker, output_path=None):
         ("Calculation integrity", "CHECK", "@", border_summary, font_green_bold, fill_highlight),
         ("Decision readiness", "NOT READY", "@", border_summary, font_red_bold, fill_highlight),
         ("empty1", None, None, None, None, None),
-        ("Implied value / share (USD / share)", "=DCF!B28", "$#,##0.00", border_summary, font_bold_black, fill_highlight_soft),
-        ("Current share price (USD / share)", "=DCF!B29", "$#,##0.00", border_summary, font_green, None),
+        (f"Implied value / share ({currency} / share)", "=DCF!B28", "$#,##0.00", border_summary, font_bold_black, fill_highlight_soft),
+        (f"Current share price ({currency} / share)", "=DCF!B29", "$#,##0.00", border_summary, font_green, None),
         ("Upside / (downside)", "=DCF!B30", "0.0%", border_summary, font_green_bold, fill_green_soft),
         ("empty2", None, None, None, None, None),
-        ("Enterprise value (USD mm)", "=DCF!B24", "$#,##0", border_summary, font_black, None),
-        ("Less: net debt (USD mm)", "=DCF!B25", "($#,##0);$#,##0;\"-\"", border_summary, font_black, None),
-        ("Equity value (USD mm)", "=DCF!B26", "$#,##0", border_summary, font_bold_black, fill_summary),
+        (f"Enterprise value ({currency} mm)", "=DCF!B24", "$#,##0", border_summary, font_black, None),
+        (f"Less: net debt ({currency} mm)", "=DCF!B25", "($#,##0);$#,##0;\"-\"", border_summary, font_black, None),
+        (f"Equity value ({currency} mm)", "=DCF!B26", "$#,##0", border_summary, font_bold_black, fill_summary),
         ("empty3", None, None, None, None, None),
         ("WACC", "=Assumptions!B22", "0.0%", border_summary, font_black, None),
         ("Terminal growth (g)", "=Assumptions!B25", "0.0%", border_summary, font_black, None),
@@ -444,7 +444,7 @@ def generate_openbb_dcf(ticker, output_path=None):
     # Title
     ws_ass['A2'] = f"{company_name} ({ticker}) — DCF Assumptions"
     ws_ass['A2'].font = font_title
-    ws_ass['A3'] = "USD mm. Blue = Input, black = formula. Market-value WACC; mid-year DCF convention."
+    ws_ass['A3'] = f"{currency} mm. Blue = Input, black = formula. Market-value WACC; mid-year DCF convention."
     ws_ass['A3'].font = font_subtitle
 
     # Header Row
@@ -563,7 +563,7 @@ def generate_openbb_dcf(ticker, output_path=None):
     cell_d.number_format = "$#,##0"
     cell_d.border = border_thin_all
 
-    ws_ass.cell(row=31, column=1, value="Net debt (USD mm)").font = font_label_bold
+    ws_ass.cell(row=31, column=1, value=f"Net debt ({currency} mm)").font = font_label_bold
     ws_ass.cell(row=31, column=1).border = border_thin_all
     cell_nd = ws_ass.cell(row=31, column=2, value="=B30-B29") # Assumptions!B31
     cell_nd.font = font_bold_black
@@ -579,7 +579,7 @@ def generate_openbb_dcf(ticker, output_path=None):
     cell_sh.number_format = "#,##0"
     cell_sh.border = border_thin_all
 
-    ws_ass.cell(row=33, column=1, value="Current share price (USD / share)").font = font_label_bold
+    ws_ass.cell(row=33, column=1, value=f"Current share price ({currency} / share)").font = font_label_bold
     ws_ass.cell(row=33, column=1).border = border_thin_all
     cell_pr = ws_ass.cell(row=33, column=2, value=price_val) # Assumptions!B33
     cell_pr.font = font_bold_blue
@@ -598,7 +598,7 @@ def generate_openbb_dcf(ticker, output_path=None):
     # Title
     ws_hist['A2'] = f"{company_name} — Historical Financials"
     ws_hist['A2'].font = font_title
-    ws_hist['A3'] = "USD mm. Source: OpenBB providers. Blue = reported actual, black = ratio."
+    ws_hist['A3'] = f"{currency} mm. Source: OpenBB providers. Blue = reported actual, black = ratio."
     ws_hist['A3'].font = font_subtitle
 
     # Table Header
@@ -687,7 +687,7 @@ def generate_openbb_dcf(ticker, output_path=None):
     # Title
     ws_dcf['A2'] = f"{company_name} ({ticker}) — Unlevered DCF"
     ws_dcf['A2'].font = font_title
-    ws_dcf['A3'] = "USD mm. Base links from Historical; forward years driven by Assumptions."
+    ws_dcf['A3'] = f"{currency} mm. Base links from Historical; forward years driven by Assumptions."
     ws_dcf['A3'].font = font_subtitle
 
     # Header Row
@@ -829,7 +829,7 @@ def generate_openbb_dcf(ticker, output_path=None):
             cell_fc.number_format = num_fmt
 
     # Valuation Summary Card in the DCF tab (Rows 21 to 33)
-    ws_dcf.cell(row=20, column=1, value="Valuation (USD mm)").font = font_section
+    ws_dcf.cell(row=20, column=1, value=f"Valuation ({currency} mm)").font = font_section
     ws_dcf.cell(row=20, column=1).border = border_thin_all
     ws_dcf.cell(row=20, column=2).border = border_thin_all
     ws_dcf.cell(row=20, column=3).border = border_thin_all
@@ -843,8 +843,8 @@ def generate_openbb_dcf(ticker, output_path=None):
         ("Less: net debt", "B25", "=Assumptions!B31", "($#,##0);$#,##0;\"-\"", False, False, border_summary, None),
         ("Equity value", "B26", "=B24-B25", "$#,##0", False, True, border_summary, fill_summary),
         ("Shares outstanding (mm)", "B27", "=Assumptions!B32", "#,##0", False, False, border_summary, None),
-        ("Implied value / share (USD / share)", "B28", "=B26/B27", "$#,##0.00", False, True, border_summary, fill_highlight),
-        ("Current share price (USD / share)", "B29", "=Assumptions!B33", "$#,##0.00", False, False, border_summary, fill_highlight_soft),
+        (f"Implied value / share ({currency} / share)", "B28", "=B26/B27", "$#,##0.00", False, True, border_summary, fill_highlight),
+        (f"Current share price ({currency} / share)", "B29", "=Assumptions!B33", "$#,##0.00", False, False, border_summary, fill_highlight_soft),
         ("Upside / (downside)", "B30", "=(B28/B29)-1", "0.0%", False, True, border_double_bottom, fill_green_soft),
         ("Implied FY1E EV/EBIT", "B31", "=B24/C7", "0.0\"x\"", False, False, border_summary, None), # C7 is Year 1 EBIT
         ("Terminal value % of EV", "B32", "=B23/B24", "0.0%", False, False, border_summary, None),
@@ -952,7 +952,7 @@ def generate_openbb_dcf(ticker, output_path=None):
     ws_sens.views.sheetView[0].showGridLines = False
 
     # Title
-    ws_sens['A2'] = "Implied Share Price (USD / share) — Sensitivity"
+    ws_sens['A2'] = f"Implied Share Price ({currency} / share) — Sensitivity"
     ws_sens['A2'].font = font_title
     ws_sens['A3'] = "Rows: WACC. Columns: terminal growth (g). Live off the DCF FCF stream."
     ws_sens['A3'].font = font_subtitle
@@ -1232,17 +1232,91 @@ def maybe_upload_to_google_drive(filepath, ticker):
     except Exception as e:
         print(f"[!] Error uploading to Google Drive: {e}")
 
+# Exchange suffix map for auto-building Yahoo Finance tickers
+EXCHANGE_SUFFIX = {
+    # Korean exchanges
+    "KS": ".KS",   "KOSPI": ".KS",
+    "KQ": ".KQ",   "KOSDAQ": ".KQ",
+    # Chinese exchanges (A-shares)
+    "SS": ".SS",   "SHA": ".SS",   "SHANGHAI": ".SS",
+    "SZ": ".SZ",   "SHE": ".SZ",   "SHENZHEN": ".SZ",
+    # Hong Kong
+    "HK": ".HK",   "HKEX": ".HK",
+    # Japanese
+    "T":  ".T",    "TSE": ".T",
+    # European
+    "L":  ".L",    "LSE": ".L",
+    "PA": ".PA",   "F":  ".F",
+    # Singapore
+    "SI": ".SI",
+}
+
+# Default currency for each exchange
+EXCHANGE_CURRENCY = {
+    "KS": "KRW", "KQ": "KRW",
+    "SS": "CNY", "SZ": "CNY",
+    "HK": "HKD",
+    "T":  "JPY",
+    "L":  "GBP",
+    "PA": "EUR", "F": "EUR",
+    "SI": "SGD",
+}
+
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Generate professional DCF models using OpenBB and openpyxl.")
-    parser.add_argument("--ticker", type=str, default="AAPL", help="Stock ticker symbol (e.g. AAPL, GOOG, RDDT)")
-    parser.add_argument("--output", type=str, default=None, help="Output file path (optional)")
+    parser = argparse.ArgumentParser(
+        description="Generate professional DCF models using OpenBB and openpyxl.",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  dcf_generator.py --ticker AAPL                           US stock (default)
+  dcf_generator.py --ticker 005930 --exchange KS           Samsung (KOSPI)
+  dcf_generator.py --ticker 600519 --exchange SS           Kweichow Moutai (Shanghai)
+  dcf_generator.py --ticker 0700   --exchange HK           Tencent (HKEX)
+  dcf_generator.py --ticker 9988   --exchange HK           Alibaba HK
+  dcf_generator.py --ticker 000858 --exchange SZ           Wuliangye (Shenzhen)
+  dcf_generator.py --ticker 7203   --exchange T            Toyota (Tokyo)
+  dcf_generator.py --ticker 0700   --exchange HK --currency HKD  Override currency label"""
+    )
+    parser.add_argument("--ticker",    type=str, default="AAPL",
+                        help="Stock ticker number/symbol (e.g. AAPL, 005930, 0700, 600519)")
+    parser.add_argument("--exchange",  type=str, default=None,
+                        help="Exchange code to append (e.g. KS, KQ, HK, SS, SZ, T, L). "
+                             "Skip for US stocks. Automatically appends the Yahoo Finance suffix.")
+    parser.add_argument("--currency",  type=str, default=None,
+                        help="Currency label for the model (e.g. USD, KRW, HKD, CNY, JPY). "
+                             "Auto-detected from exchange if not provided.")
+    parser.add_argument("--output",    type=str, default=None,
+                        help="Output file path (optional)")
     args = parser.parse_args()
+
+    # Build full Yahoo Finance ticker symbol with exchange suffix
+    raw_ticker = args.ticker.upper()
+    exchange_key = args.exchange.upper() if args.exchange else None
+    if exchange_key:
+        suffix = EXCHANGE_SUFFIX.get(exchange_key)
+        if suffix:
+            full_ticker = raw_ticker + suffix
+        else:
+            print(f"[!] Unknown exchange code '{exchange_key}'. Appending as-is: .{exchange_key}")
+            full_ticker = raw_ticker + "." + exchange_key
+    else:
+        full_ticker = raw_ticker
+
+    # Determine currency label
+    if args.currency:
+        currency = args.currency.upper()
+    elif exchange_key:
+        currency = EXCHANGE_CURRENCY.get(exchange_key, "USD")
+    else:
+        currency = "USD"
 
     print("=================================================================")
     print("      WALL STREET STANDARD DCF MODEL AUTOMATION GENERATOR       ")
     print("=================================================================")
+    if exchange_key:
+        print(f"[*] Exchange: {exchange_key} | Full ticker: {full_ticker} | Currency: {currency}")
     
-    success = generate_openbb_dcf(args.ticker.upper(), args.output)
+    success = generate_openbb_dcf(full_ticker, args.output, currency=currency)
     if success:
         print("[*] Excel DCF Model Generated Successfully.")
         sys.exit(0)

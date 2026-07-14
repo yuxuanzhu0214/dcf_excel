@@ -1,6 +1,6 @@
 # Unlevered DCF Excel Model Generator
 
-An industrial-grade, fully dynamic, and linkage-complete Unlevered Discounted Cash Flow (DCF) valuation model generator for US equities. It automates financial data extraction, consensus forecasting, model tapering, WACC estimation, sensitivity grids, and checks into a publication-ready Excel spreadsheet.
+An industrial-grade, fully dynamic, and linkage-complete Unlevered Discounted Cash Flow (DCF) valuation model generator for **global equities**. Supports US, Korean, Chinese (A-share), Hong Kong, Japanese, and European stocks. It automates financial data extraction, consensus forecasting, model tapering, WACC estimation, sensitivity grids, and checks into a publication-ready Excel spreadsheet.
 
 ## 🚀 Quick Start
 
@@ -21,7 +21,59 @@ If you run the script without any arguments, it will interactively prompt you fo
 # Enter stock ticker (e.g. AAPL, GOOG, NVDA): RDDT
 ```
 
-The resulting file will be saved in your current working directory as `<TICKER>_DCF_Model.xlsx`.
+The resulting file will be saved in the project's `output/` folder as `<TICKER>_DCF_Model.xlsx`.
+
+---
+
+## 🌏 International Stock Support
+
+The generator supports stocks on major global exchanges. Use the `--exchange` flag to specify the market. The currency label in the model is automatically inferred from the exchange.
+
+### Exchange Codes & Examples
+
+| Region | Exchange | Code | Example Ticker | Example Stock |
+| :--- | :--- | :--- | :--- | :--- |
+| **Korea** | KOSPI | `KS` | `005930` | Samsung Electronics |
+| **Korea** | KOSDAQ | `KQ` | `247540` | Krafton |
+| **China** | Shanghai (A-share) | `SS` | `600519` | Kweichow Moutai |
+| **China** | Shenzhen (A-share) | `SZ` | `000858` | Wuliangye |
+| **Hong Kong** | HKEX | `HK` | `0700` | Tencent |
+| **Hong Kong** | HKEX | `HK` | `9988` | Alibaba HK |
+| **Japan** | Tokyo Stock Exchange | `T` | `7203` | Toyota |
+| **UK** | London Stock Exchange | `L` | `SHEL` | Shell |
+
+### Command Format
+
+```bash
+# US stocks — no flag needed
+dcf NVDA
+dcf TSLA
+
+# Korean stocks (KOSPI)
+dcf 005930 --exchange KS       # Samsung Electronics → 005930.KS (KRW)
+dcf 000660 --exchange KS       # SK Hynix
+
+# Chinese A-shares
+dcf 600519 --exchange SS       # Kweichow Moutai → 600519.SS (CNY)
+dcf 000858 --exchange SZ       # Wuliangye → 000858.SZ (CNY)
+
+# Hong Kong stocks
+dcf 0700   --exchange HK       # Tencent → 0700.HK (HKD)
+dcf 9988   --exchange HK       # Alibaba HK → 9988.HK (HKD)
+
+# Japanese stocks
+dcf 7203   --exchange T        # Toyota → 7203.T (JPY)
+
+# Override currency label manually
+dcf 0700   --exchange HK --currency HKD
+```
+
+> [!NOTE]
+> Analyst consensus estimates (Year 1 & 2 growth) may be less available for non-US stocks. The model automatically falls back to historical growth rates if consensus data is unavailable.
+
+> [!TIP]
+> Financial statements for international stocks are reported in their local currency. The model labels all monetary figures using the auto-detected currency (e.g., KRW mm, HKD mm, CNY mm).
+
 
 ### 🌍 Global Terminal Command Setup (Zsh/Bash)
 
